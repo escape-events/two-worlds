@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Two Worlds Puzzle</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin:0; padding:0; background:transparent; font-family: Georgia, "Times New Roman", serif; }
+    .puzzle { width:min(100%,900px); margin:0 auto; text-align:center; }
+    .image-wrap { position:relative; width:100%; aspect-ratio:4/3; overflow:hidden; }
+    .base-image, .overlay { position:absolute; display:block; user-select:none; -webkit-user-drag:none; pointer-events:none; }
+    .base-image { inset:0; width:100%; height:100%; object-fit:cover; }
+    .overlay { opacity:0; transition:opacity 0.18s ease; }
+    .overlay.active { opacity:1; }
+    .baby-overlay { left:14.1575%; top:57.5506%; width:22.7901%; height:29.4659%; }
+    .wleft-overlay { left:40.4696%; top:26.5193%; width:14.5028%; height:19.3370%; }
+    .wright-overlay { left:63.5359%; top:21.3628%; width:26.2431%; height:31.3076%; }
+    .hotspot { position:absolute; border:0; padding:0; margin:0; background:transparent; cursor:pointer; z-index:5; -webkit-tap-highlight-color:transparent; }
+    .hotspot:focus-visible { outline:3px solid rgba(255,255,255,.95); outline-offset:3px; border-radius:50%; }
+    .baby-hotspot { left:19.8%; top:66.8%; width:14%; height:20.5%; }
+    .wleft-hotspot { left:43.0%; top:32.8%; width:8.0%; height:11.0%; }
+    .wright-hotspot { left:69.0%; top:26.0%; width:20.0%; height:24.0%; }
+    .labels { display:grid; grid-template-columns:repeat(4,1fr); width:min(78%,720px); gap:0; margin:8px auto 0; align-items:start; }
+    .label { min-height:1.2em; font-size:clamp(22px,3.6vw,34px); line-height:1.1; font-weight:600; letter-spacing:.04em; color:#2c2925; text-align:center; white-space:nowrap; text-transform:uppercase; }
+    .fixed-word { padding-inline:0; }
+  </style>
+</head>
+<body>
+  <div class="puzzle">
+    <div class="image-wrap">
+      <img class="base-image" src="images/base.jpg" alt="Close-up statue puzzle image" />
+      <img class="overlay baby-overlay" id="baby-la" src="images/baby-la.jpg" alt="" aria-hidden="true" />
+      <img class="overlay baby-overlay" id="baby-te" src="images/baby-te.jpg" alt="" aria-hidden="true" />
+      <img class="overlay baby-overlay" id="baby-blank" src="images/baby-blank.jpg" alt="" aria-hidden="true" />
+      <img class="overlay baby-overlay" id="baby-do" src="images/baby-do.jpg" alt="" aria-hidden="true" />
+      <img class="overlay baby-overlay" id="baby-re" src="images/baby-re.jpg" alt="" aria-hidden="true" />
+      <img class="overlay baby-overlay" id="baby-me" src="images/baby-me.jpg" alt="" aria-hidden="true" />
+      <img class="overlay wleft-overlay" id="wleft-la" src="images/woman-left-la.jpg" alt="" aria-hidden="true" />
+      <img class="overlay wleft-overlay" id="wleft-te" src="images/woman-left-te.jpg" alt="" aria-hidden="true" />
+      <img class="overlay wleft-overlay" id="wleft-blank" src="images/woman-left-blank.jpg" alt="" aria-hidden="true" />
+      <img class="overlay wleft-overlay" id="wleft-do" src="images/woman-left-do.jpg" alt="" aria-hidden="true" />
+      <img class="overlay wleft-overlay" id="wleft-re" src="images/woman-left-re.jpg" alt="" aria-hidden="true" />
+      <img class="overlay wleft-overlay" id="wleft-me" src="images/woman-left-me.jpg" alt="" aria-hidden="true" />
+      <img class="overlay wleft-overlay" id="wleft-fa" src="images/woman-left-fa.jpg" alt="" aria-hidden="true" />
+      <img class="overlay wright-overlay" id="wright-la-special" src="images/woman-right-la.png" alt="" aria-hidden="true" />
+      <img class="overlay wright-overlay" id="wright-te" src="images/woman-right-te.jpg" alt="" aria-hidden="true" />
+      <img class="overlay wright-overlay" id="wright-blank" src="images/woman-right-blank.jpg" alt="" aria-hidden="true" />
+      <img class="overlay wright-overlay" id="wright-do" src="images/woman-right-do.jpg" alt="" aria-hidden="true" />
+      <img class="overlay wright-overlay" id="wright-re" src="images/woman-right-re.jpg" alt="" aria-hidden="true" />
+      <img class="overlay wright-overlay" id="wright-me" src="images/woman-right-me.jpg" alt="" aria-hidden="true" />
+      <img class="overlay wright-overlay" id="wright-fa" src="images/woman-right-fa.jpg" alt="" aria-hidden="true" />
+      <button class="hotspot baby-hotspot" id="baby-hotspot" type="button" aria-label="Cycle the baby symbol"></button>
+      <button class="hotspot wleft-hotspot" id="wleft-hotspot" type="button" aria-label="Cycle the woman symbol closest to the baby"></button>
+      <button class="hotspot wright-hotspot" id="wright-hotspot" type="button" aria-label="Cycle the other woman symbol"></button>
+    </div>
+    <div class="labels">
+      <div class="label" id="baby-label">SO</div>
+      <div class="label" id="wleft-label">ME</div>
+      <div class="label fixed-word">YET</div>
+      <div class="label" id="wright-label"></div>
+    </div>
+  </div>
+  <script>
+    const order = ['SO','LA','', 'TE','DO','RE','ME','FA'];
+    const groups = {
+      baby: { index: 0, labelEl: document.getElementById('baby-label'), buttonEl: document.getElementById('baby-hotspot'), description: 'baby symbol', stateToOverlay: {SO:null, LA:'baby-la', '':'baby-blank', TE:'baby-te', DO:'baby-do', RE:'baby-re', ME:'baby-me', FA:'baby-te'} },
+      wleft: { index: 6, labelEl: document.getElementById('wleft-label'), buttonEl: document.getElementById('wleft-hotspot'), description: 'woman symbol closest to the baby', stateToOverlay: {SO:null, LA:'wleft-la', '':'wleft-blank', TE:'wleft-te', DO:'wleft-do', RE:'wleft-re', ME:'wleft-me', FA:'wleft-fa'} },
+      wright: { index: 2, labelEl: document.getElementById('wright-label'), buttonEl: document.getElementById('wright-hotspot'), description: 'other woman symbol', stateToOverlay: {SO:null, LA:'wright-la-special', '':'wright-blank', TE:'wright-te', DO:'wright-do', RE:'wright-re', ME:'wright-me', FA:'wright-fa'} }
+    };
+    const allOverlayIds = ['baby-la','baby-te','baby-blank','baby-do','baby-re','baby-me','wleft-la','wleft-te','wleft-blank','wleft-do','wleft-re','wleft-me','wleft-fa','wright-la-special','wright-te','wright-blank','wright-do','wright-re','wright-me','wright-fa'];
+    const overlayEls = Object.fromEntries(allOverlayIds.map(id => [id, document.getElementById(id)]));
+    function renderGroup(group) {
+      Object.keys(group.stateToOverlay).forEach(key => { const id = group.stateToOverlay[key]; if (id && overlayEls[id]) overlayEls[id].classList.remove('active'); });
+      const name = order[group.index];
+      const overlayId = group.stateToOverlay[name];
+      if (overlayId && overlayEls[overlayId]) overlayEls[overlayId].classList.add('active');
+      group.labelEl.textContent = name;
+      group.buttonEl.setAttribute('aria-label', name ? ('Current ' + group.description + ' is ' + name + '. Activate to show the next symbol.') : ('The current ' + group.description + ' is blank. Activate to show the next symbol.'));
+    }
+    function nextGroup(key) { groups[key].index = (groups[key].index + 1) % order.length; renderGroup(groups[key]); }
+    groups.baby.buttonEl.addEventListener('click', () => nextGroup('baby'));
+    groups.wleft.buttonEl.addEventListener('click', () => nextGroup('wleft'));
+    groups.wright.buttonEl.addEventListener('click', () => nextGroup('wright'));
+    renderGroup(groups.baby); renderGroup(groups.wleft); renderGroup(groups.wright);
+  </script>
+</body>
+</html>
